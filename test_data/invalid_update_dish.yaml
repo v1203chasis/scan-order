@@ -1,0 +1,14 @@
+- case_name: "修改价格为负数"
+  after_price: -1
+
+- case_name: "修改价格为0"
+  after_price: 0
+
+- case_name: "修改价格为空"
+  after_price: ""
+
+- case_name: "修改价格类型错误"
+  after_price: "abc"
+
+- case_name: "修改价格为None"
+  after_price: null

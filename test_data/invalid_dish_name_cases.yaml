@@ -1,0 +1,11 @@
+- case_name: name 为空
+  invalid_name: ""
+  expected_status: 422
+
+- case_name: name 超长（51 字符）
+  invalid_name: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  expected_status: 422
+
+- case_name: name 含特殊字符
+  invalid_name: "@#$%^&*"
+  expected_status: 404

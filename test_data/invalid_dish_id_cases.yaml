@@ -1,0 +1,12 @@
+# test_data/invalid_dish_id_cases.yaml
+- case_name: id 是字母
+  invalid_id: abc
+  expected_status: 422
+
+- case_name: id 是负数
+  invalid_id: -1
+  expected_status: 422
+
+- case_name: id 是 0
+  invalid_id: 0
+  expected_status: 422
