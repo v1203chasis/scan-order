@@ -37,16 +37,38 @@ def init_db():
             )
         """)
 
-        # 3. 建 orders 表（新增）
+                # 4. 建 orders 表（订单主表）只存"订单级别"的信息（总价、状态）。
         conn.execute("""
             CREATE TABLE IF NOT EXISTS orders (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                total REAL NOT NULL,
+                status TEXT NOT NULL DEFAULT '待支付',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 5. 建 order_items 表（订单项）存"订单里的每个菜品"（菜名、价格、数量）。order_items.order_id 关联 orders.id。
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS order_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_id INTEGER NOT NULL,
                 dish_id INTEGER NOT NULL,
                 dish_name TEXT NOT NULL,
                 dish_price REAL NOT NULL,
                 quantity INTEGER NOT NULL,
-                total REAL NOT NULL,
+                total REAL NOT NULL
+            )
+        """)
+
+                #  6. payments 表（Part 8 新增）
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_id INTEGER NOT NULL,
+                amount REAL NOT NULL,
+                method TEXT NOT NULL DEFAULT '模拟支付',
                 status TEXT NOT NULL DEFAULT '待支付',
+                transaction_id TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)

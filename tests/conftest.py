@@ -64,16 +64,17 @@ def order_factory(base_url, db):
     def create_order():
         r = requests.post(f"{base_url}/orders")
         assert r.status_code == 200, f"factory 下单失败：{r.text}"
-        order_ids = r.json()["data"]["order_ids"]
-        created_order_ids.extend(order_ids)
-        return order_ids
+        order_id = r.json()["data"]["order_id"]
+        created_order_ids.append(order_id)
+        return order_id
 
     yield create_order
 
-    # 清理：硬删除订单
+    # 清理：先删 payments，再删 order_items，最后删 orders
     for order_id in created_order_ids:
+        db.execute_update("DELETE FROM payments WHERE order_id = ?", (order_id,))
+        db.execute_update("DELETE FROM order_items WHERE order_id = ?", (order_id,))
         db.execute_update("DELETE FROM orders WHERE id = ?", (order_id,))
-        
 
 
 def load_yaml(file_path):

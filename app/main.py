@@ -200,12 +200,12 @@ from app.crud import crud_order
 @app.post("/orders")
 def create_order_api():
     """提交订单（从购物车）"""
-    order_ids = crud_order.create_order_from_cart()
-    if order_ids is None:
+    order_id = crud_order.create_order_from_cart()
+    if order_id is None:
         raise HTTPException(status_code=400, detail="购物车为空或菜品不能下单")
     return {
         "msg": "下单成功",
-        "data": {"order_ids": order_ids}#这里返回的是订单号
+        "data": {"order_id": order_id}   # ← 单个订单号
     }
 
 
@@ -213,7 +213,7 @@ def create_order_api():
 def get_orders_api():
     """查看订单列表"""
     orders = crud_order.get_orders()
-    return {"msg": "获取成功", "data": orders}#这里返回的是字典列表
+    return {"msg": "获取成功", "data": orders}
 
 
 @app.get("/orders/{order_id}")
@@ -222,4 +222,90 @@ def get_order_by_id_api(order_id: int = Path(..., gt=0)):
     order = crud_order.get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="订单不存在")
-    return {"msg": "获取成功", "data": order}#这里返回的是字典
+    return {"msg": "获取成功", "data": order}
+
+
+from app.crud import crud_payment
+
+
+# ==================== 支付（Part 8） ====================
+
+@app.post("/orders/{order_id}/pay")
+def pay_order_api(order_id: int = Path(..., gt=0)):
+    """支付订单（模拟支付）"""
+    payment_id, error = crud_payment.pay_order(order_id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return {
+        "msg": "支付成功",
+        "data": {"payment_id": payment_id, "order_id": order_id}
+    }
+
+
+@app.get("/payments/{payment_id}")
+def get_payment_api(payment_id: int = Path(..., gt=0)):
+    """查看支付记录详情"""
+    payment = crud_payment.get_payment_by_id(payment_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="支付记录不存在")
+    return {"msg": "获取成功", "data": payment}
+
+
+@app.get("/orders/{order_id}/payments")
+def get_payments_by_order_api(order_id: int = Path(..., gt=0)):
+    """查看某个订单的所有支付记录"""
+    payments = crud_payment.get_payments_by_order(order_id)
+    return {"msg": "获取成功", "data": payments}
+
+
+from app.crud import crud_order_status
+
+
+# ==================== 订单状态流转（Part 9） ====================
+
+@app.post("/orders/{order_id}/cancel")
+def cancel_order_api(order_id: int = Path(..., gt=0)):
+    """取消订单（待支付 → 已取消）"""
+    result, error = crud_order_status.cancel_order(order_id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return {
+        "msg": "取消成功",
+        "data": {"order_id": order_id}
+    }
+#result, error = ...：接收两个返回值（(结果, 错误信息)
+
+@app.post("/orders/{order_id}/accept")
+def accept_order_api(order_id: int = Path(..., gt=0)):
+    """商户接单（已支付 → 已接单）"""
+    result, error = crud_order_status.accept_order(order_id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return {
+        "msg": "接单成功",
+        "data": {"order_id": order_id}
+    }
+
+
+@app.post("/orders/{order_id}/complete")
+def complete_order_api(order_id: int = Path(..., gt=0)):
+    """完成订单（已接单 → 已完成）"""
+    result, error = crud_order_status.complete_order(order_id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return {
+        "msg": "订单完成",
+        "data": {"order_id": order_id}
+    }
+
+
+@app.post("/orders/{order_id}/refund")
+def refund_order_api(order_id: int = Path(..., gt=0)):
+    """退款（已支付 → 已退款）"""
+    result, error = crud_order_status.refund_order(order_id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return {
+        "msg": "退款成功",
+        "data": {"order_id": order_id}
+    }
