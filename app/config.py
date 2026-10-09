@@ -1,27 +1,23 @@
-"""集中管理配置"""
+# app/config.py
 import os
 from pathlib import Path
 
-
-class Config:
-    # 项目根目录
-    BASE_DIR = Path(__file__).resolve().parent.parent
-
-    # 数据库路径（支持环境变量切换）
-    DB_PATH = os.getenv("DB_PATH", str(BASE_DIR / "scan_order.db"))
-
-    # 服务地址
-    BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
-
-    # 密钥（Part 11 用）
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
-
-    # 支付方式
-    PAYMENT_METHOD = os.getenv("PAYMENT_METHOD", "模拟支付")
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# 全局配置实例
-config = Config()
+def get_db_path():
+    return os.getenv("DB_PATH", str(BASE_DIR / "scan_order.db"))
+
+
+def get_base_url():
+    return os.getenv("BASE_URL", "http://127.0.0.1:8000")
+
+
+def get_secret_key():
+    return os.getenv("SECRET_KEY", "dev-secret-key")
+
+
+
 
 '''
 流程

@@ -1,9 +1,41 @@
 import pytest
 import requests
 import uuid
-
+import os
 
 BASE_URL = "http://127.0.0.1:8000"
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--env",
+        action="store",
+        default="dev",
+        help="指定测试环境：dev / test",
+    )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def set_env(request):
+    """根据 --env 设置环境变量"""
+    env = request.config.getoption("--env")
+
+    env_map = {
+        "dev": {
+            "DB_PATH": "scan_order.db",
+            "BASE_URL": "http://127.0.0.1:8000",
+            "SECRET_KEY": "dev-secret-key-that-is-at-least-32-bytes-long",
+        },
+        "test": {
+            "DB_PATH": "test_scan_order.db",
+            "BASE_URL": "http://127.0.0.1:8000",
+            "SECRET_KEY": "test-secret-key-that-is-at-least-32-bytes-long",
+        },
+    }
+
+    config = env_map[env]
+    for key, value in config.items():
+        os.environ[key] = value
+
 
 
 @pytest.fixture(scope="session", autouse=True)

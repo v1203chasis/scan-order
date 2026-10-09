@@ -1,13 +1,9 @@
 import sqlite3
-from app.config import config
+from app.config import get_db_path
 
-
-DB_PATH = config.DB_PATH
-print(f"[db_helper] DB_PATH = {DB_PATH}")  
 
 def get_conn():
-    """获取数据库连接"""
-    conn = sqlite3.connect(DB_PATH, isolation_level=None)
+    conn = sqlite3.connect(get_db_path(), isolation_level=None)
     conn.row_factory = sqlite3.Row
     return conn
 
