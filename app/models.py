@@ -23,3 +23,16 @@ class CartItemCreate(BaseModel):
 class CartQuantityUpdate(BaseModel):
     """修改数量请求体"""
     quantity: int = Field(..., gt=0)
+
+
+class UserCreate(BaseModel):
+    """注册请求体"""
+    username: str = Field(..., min_length=1, max_length=50)
+    password: str = Field(..., min_length=1, max_length=100)
+    role: str = Field(..., pattern="^(customer|merchant)$")   # 只允许 customer / merchant
+
+
+class UserLogin(BaseModel):
+    """登录请求体"""
+    username: str = Field(..., min_length=1, max_length=50)
+    password: str = Field(..., min_length=1, max_length=100)

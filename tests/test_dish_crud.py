@@ -1,7 +1,7 @@
 """基础 CRUD 测试：添加、查询、修改"""
 import requests
 import pytest
-from tests.conftest import load_yaml
+from tests.utils import load_yaml
 
 
 # ==================== 添加菜品 ====================

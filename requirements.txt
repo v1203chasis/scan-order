@@ -2,3 +2,5 @@ fastapi[standard]
 pytest
 requests
 allure-pytest
+pyjwt
+bcrypt

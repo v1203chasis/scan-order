@@ -2,7 +2,7 @@
 from app.db_helper import execute_query, execute_update, get_conn
 
 
-def create_order_from_cart():
+def create_order_from_cart(user_id:int):
     """
     从购物车创建订单（事务）
     返回：订单 ID，或 None（购物车为空 / 有菜不能下单）
@@ -12,7 +12,8 @@ def create_order_from_cart():
         SELECT ci.dish_id, ci.quantity, d.name, d.price, d.status, d.is_deleted
         FROM cart_items ci
         LEFT JOIN dishes d ON ci.dish_id = d.id
-    """)
+        WHERE ci.user_id = ?
+    """,(user_id,))
     if not cart_items:
         return None
 
@@ -35,8 +36,8 @@ def create_order_from_cart():
 
             # 4.1 创建订单主表记录（只 INSERT 一次）
             cursor = conn.execute(
-                "INSERT INTO orders (total) VALUES (?)",
-                (total,)
+                "INSERT INTO orders (user_id,total) VALUES (?,?)",
+                (user_id,total)
             )
             order_id = cursor.lastrowid   # 订单号（只有一个）
 
@@ -52,7 +53,7 @@ def create_order_from_cart():
                 )
 
             # 4.3 清空购物车
-            conn.execute("DELETE FROM cart_items")
+            conn.execute("DELETE FROM cart_items WHERE user_id = ?",(user_id,))
             conn.commit()
             return order_id   # ← 返回单个订单号，不是列表
         except Exception as e:
@@ -60,20 +61,20 @@ def create_order_from_cart():
             raise e
 
 
-def get_orders():
+def get_orders(user_id:int):
     """查看订单列表"""
     rows = execute_query(
-        "SELECT id, total, status, created_at FROM orders ORDER BY id DESC"
+        "SELECT id, total, status, created_at FROM orders WHERE user_id = ? ORDER BY id DESC",(user_id,)
     )
     return rows if rows else []
 #这个是用户打开我的订单页面，查看所有订单
 
-def get_order_by_id(order_id: int):
+def get_order_by_id(order_id: int,user_id:int):
     """查看订单详情（包含订单项）"""
     # 1. 查订单主表
     order_rows = execute_query(
-        "SELECT id, total, status, created_at FROM orders WHERE id = ?",
-        (order_id,)
+        "SELECT id, total, status, created_at FROM orders WHERE id = ? AND user_id = ?",
+        (order_id,user_id)
     )
     if not order_rows:
         return None
@@ -107,5 +108,21 @@ def get_order_by_id(order_id: int):
 }
 
 '''
+def get_order_by_id_admin(order_id: int):
+    """商户视角：查订单（不过滤 user_id）"""
+    order_rows = execute_query(
+        "SELECT id, user_id, total, status, created_at FROM orders WHERE id = ?",
+        (order_id,)
+    )
+    if not order_rows:
+        return None
+
+    order = order_rows[0]
+    item_rows = execute_query(
+        "SELECT id, dish_id, dish_name, dish_price, quantity, total FROM order_items WHERE order_id = ?",
+        (order_id,)
+    )
+    order["items"] = item_rows if item_rows else []
+    return order
 
 
