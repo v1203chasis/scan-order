@@ -1,0 +1,32 @@
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 环境变量（密钥）
+.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 数据库
+*.db
+*.sqlite3
+
+# 测试报告和缓存
+report/
+report.xml
+report.html
+.pytest_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 系统
+.DS_Store
+Thumbs.db
