@@ -4,3 +4,5 @@ requests
 allure-pytest
 pyjwt
 bcrypt
+flask
+selenium

@@ -31,3 +31,25 @@ def get_secret_key():
    ↓
 5. 数据库操作都用 test_scan_order.db
 '''
+
+# ================= 新增部分 =================
+class Config:
+    @property#
+    def SECRET_KEY(self):
+        return get_secret_key()
+    
+    @property
+    def DB_PATH(self):
+        return get_db_path()
+    
+    @property
+    def BASE_URL(self):
+        return get_base_url()
+    
+    @property
+    def ALGORITHM(self):
+        return os.getenv("ALGORITHM", "HS256")
+
+# 实例化并暴露出去
+config = Config()
+# ============================================

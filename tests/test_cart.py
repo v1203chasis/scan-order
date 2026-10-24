@@ -24,6 +24,7 @@ def test_add_to_cart_success(base_url, db, dish_factory, cart_factory, customer_
     assert len(rows) == 1
     assert rows[0]["dish_id"] == dish_id
     assert rows[0]["quantity"] == quantity
+    
 
 
 @pytest.mark.parametrize("name, price, quantity", [("购物车重复添加的菜", 38.0, 2)])

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>支付 - 扫码点餐</title>
+    <style>
+        body { font-family: sans-serif; max-width: 400px; margin: 80px auto; text-align: center; }
+        button { padding: 12px 30px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>支付页面</h1>
+    <div class="welcome" id="pay-welcome">用户：{{ user }}</div>
+    <p>请确认支付</p>
+    <a href="/pay/confirm"><button id="confirm-pay">确认支付</button></a>
+    <p style="margin-top: 20px;"><a href="/cart">返回购物车</a></p>
+</body>
+</html>

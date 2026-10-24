@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>菜单 - 扫码点餐</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
+        .dish-item { border: 1px solid #eee; padding: 12px; margin: 8px 0; display: flex; justify-content: space-between; }
+        .welcome { color: #333; margin-bottom: 20px; }
+        .add-btn { background: #4CAF50; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; }
+        .cart-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>菜单</h1>
+    <div class="welcome" id="welcome">欢迎，{{ user }}！</div>
+
+    {% for dish in dishes %}
+    <div class="dish-item" data-dish-name="{{ dish.name }}">
+        <span>{{ dish.name }} - ￥{{ dish.price }}</span>
+        <a href="/cart/add/{{ dish.id }}" class="add-btn">加入购物车</a>
+    </div>
+    {% endfor %}
+
+    <a href="/cart" class="cart-btn" id="go-cart">查看购物车</a>
+    <a href="/logout" style="margin-left: 20px;">退出</a>
+</body>
+</html>

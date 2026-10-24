@@ -171,7 +171,7 @@ def user_factory(base_url, db):
     for user_id in reversed(created_ids):
         db.execute_update("DELETE FROM users WHERE id = ?", (user_id,))
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def login(base_url):
     def _login(username, password):
         r = requests.post(f"{base_url}/login", json={"username": username, "password": password})

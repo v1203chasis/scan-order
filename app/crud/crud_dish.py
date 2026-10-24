@@ -48,6 +48,8 @@ def get_available_dishes():
     rows = execute_query(sql, ())
     return rows if rows else []
 
+
+
 ###软删除函数
 def soft_delete_dish(dish_id: int):
     sql = "UPDATE dishes SET is_deleted = 1 WHERE id = ? AND is_deleted = 0"
