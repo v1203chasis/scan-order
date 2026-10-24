@@ -1,116 +1,135 @@
-10.9日改动
-与先前的电商项目做了对比，发现环境变量的设置方面还有优化的地方，可以将修改环境变量的命令行改动为输入关键词就可以修改设置的全部环境变量
+# 🍽️ Scan-Order 扫码点餐系统
 
-优点：方便，牵一发而动全身
-缺点：一改就要一起改，没办法做到只改某一个
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)
+![Pytest](https://img.shields.io/badge/Pytest-Automation-0A9EDC?logo=pytest&logoColor=white)
+![Selenium](https://img.shields.io/badge/Selenium-UI%20Testing-43B02A?logo=selenium&logoColor=white)
+![Allure](https://img.shields.io/badge/Report-Allure-orange)
 
-扫码下单系统的原有部分
-在config.py设置了Config类，
-Config类的功能主要为使用os来读取命令行中的环境变量（SET）
-实例化config = Config（）
-###
-用类不够灵活
-就是说类因为是整个类import过来的，这个类就在import过来的那一瞬间就被拍下了快照，所以说就是后续整个会话的操作都是在这个快照下的环境进行，然后函数的话就是没调用一次就实行一次，可以获得最新的值，其实类里面的函数也是流动的，但是因为import时只读一遍，就被拍快照了
+> 一个基于 FastAPI 的模拟线下扫码点餐系统，包含完整的业务逻辑（顾客/商户双角色）、数据库事务处理以及完善的**接口自动化**与 **UI 自动化测试框架**。
 
+## 📖 项目简介
 
-然后如何定位到模块呢
-from config import config
-db_helper
+本项目旨在模拟用户在线下用餐时进行**扫码下单**的真实业务场景。系统分为**顾客端**和**商户端**，涵盖了从浏览菜单、加入购物车、下单支付，到商户接单、完成订单的完整业务闭环。
 
-用模块函数接收变量
-DB_PATH = config.DB_PATH
-在连接数据库的时候填入环境变量
-conn = sqlite3.connect(DB_PATH, isolation_level=None)
+项目不仅包含基于 FastAPI 的后端 RESTful API，还配备了两套高质量的自动化测试体系：
+1. **接口自动化测试**：基于 `Pytest + Requests`，采用 Factory 工厂模式管理测试数据，支持多环境切换。
+2. **UI 自动化测试**：基于 `Pytest + Selenium`，采用 Page Object (PO) 设计模式，支持无头模式运行。
 
-要修改base_url的话也是这样
+## ✨ 核心功能
 
-而修改后的代码
-不使用类来将方法囊括，而是分为一个个专门负责各自环境变量读取工作的函数
-这样在import进不同的模块中，一调用就会回到config去执行，获得命令行中最新的环境变量
+### 👨‍🍳 商户端 (Merchant)
+- **菜品管理**：添加菜品、修改价格、上下架菜品。
+- **软删除机制**：移除菜品时采用软删除（`is_deleted=1`），保护历史订单数据完整性。
+- **订单处理**：查看已支付订单、接单、完成订单。
 
+### 🙋‍♂️ 顾客端 (Customer)
+- **浏览菜单**：仅展示已上架且未被删除的菜品。
+- **购物车管理**：添加菜品（自动累加）、修改数量、删除菜品。
+- **订单操作**：提交订单（事务保证）、模拟支付、取消订单、申请退款。
 
-修改后的代码
-首先时config全改为函数
+## 🛠️ 技术栈
 
-然后就是在conftest中将详细的环境变量书写好
-request.config.getoption取得命令行中的相关内容
-传给这个env，然后再找到匹配的
-传给这个config = env_map[env]
+- **后端框架**：FastAPI
+- **数据库**：SQLite (原生 SQL，包含事务控制、乐观锁防并发)
+- **身份认证**：JWT (PyJWT) + Bcrypt (密码加密)
+- **接口测试**：Pytest + Requests + YAML 数据驱动
+- **UI 测试**：Pytest + Selenium (Page Object 模式)
+- **测试报告**：Allure Pytest
 
-最后    for key, value in config.items():
-        os.environ[key] = value
-去遍历整个环境变量
-直接将环境变量全部修改好
+## 📂 项目结构
 
-然后在运行db_helper时，from app.config import get_db_path
-config  的os.getenv()读取到当前conftest环境中的环境变量
-将这个值传给db_helper
-
-
-
-UI 自动化踩坑与解决记录
-
-MenuPage 缺 open() 导致 404
-现象：
-
-selenium.common.exceptions.TimeoutException
-[当前 URL] http://localhost:5000
-原因：MenuPage 没有定义自己的 open()，调用时用的是 BasePage 的：
-
-python
-def open(self, path=""):
-    self.driver.get(self.base_url + path)   # path="" → 访问根路径 "/"
-访问根路径 /，Flask 没定义，404。
-
-错误源代码：
-def test_add_dish_to_cart(logged_in_menu):
-    """UI_TS_menu_005：点击加购，购物车中数量 +1"""
-    # 1. 记录加购前数量
-    cart_before = logged_in_menu.go_to_cart()
-    names_before = cart_before.get_cart_dish_names()
-    qty_before = cart_before.get_quantity_of("黄焖鸡") if "黄焖鸡" in names_before else 0
-
-    # 2. 回菜单页，加购一次
-    from pages.menu_page import MenuPage
-    menu = MenuPage(logged_in_menu.driver, logged_in_menu.base_url)
-    menu.open()                    # ← 这里
-    menu.add_dish_to_cart("黄焖鸡")
-
-    # 3. 再看购物车
-    cart_after = menu.go_to_cart()
-    qty_after = cart_after.get_quantity_of("黄焖鸡")
-
-    # 4. 断言：加购后 == 加购前 + 1
-    assert qty_after == qty_before + 1, f"期望 {qty_before + 1}，实际 {qty_after}"
-
-原因：
-BasePage.open() 是
-def open(self, path=""):
-    self.driver.get(self.base_url + path)
-    return self
-调用 menu.open() → path="" → 访问 http://localhost:8000（根路径）→ 404。
+```text
+scan-order/
+├── app/                    # 核心后端目录
+│   ├── crud/               # 数据库 CRUD 操作 (模块化)
+│   ├── auth.py             # JWT 与密码哈希工具
+│   ├── config.py           # 配置管理 (支持环境变量)
+│   ├── db_helper.py        # SQLite 连接与建表
+│   ├── dependencies.py     # FastAPI 依赖注入 (权限校验)
+│   ├── main.py             # FastAPI 路由入口
+│   └── models.py           # Pydantic 数据校验模型
+├── tests/                  # 接口自动化测试目录
+│   ├── conftest.py         # 核心 Fixtures (环境切换、数据清理、Factory 工厂)
+│   ├── test_data/          # YAML 测试数据
+│   ├── test_auth.py        # 认证模块测试
+│   ├── test_cart.py        # 购物车接口测试
+│   ├── test_dish.py        # 菜品管理测试
+│   ├── test_order.py       # 订单流转测试
+│   └── test_user.py        # 用户注册登录测试
+├── selenium_test/          # UI 自动化测试目录
+│   ├── pages/              # Page Object 页面对象封装
+│   ├── tests/              # UI 测试用例
+│   └── conftest.py         # Selenium 驱动初始化与截图 Hook
+├── requirements.txt        # 项目依赖
+└── README.md
 
 
-解决：给 MenuPage 加自己的 open()：
 
-第二种：
-def test_add_dish_to_cart(logged_in_menu):
-    """UI_TS_menu_005：点击加购，购物车中数量 +1"""
-    # 1. 记录加购前数量
-    cart_before = logged_in_menu.go_to_cart()
-    names_before = cart_before.get_cart_dish_names()
-    qty_before = cart_before.get_quantity_of("黄焖鸡") if "黄焖鸡" in names_before else 0
+1. 克隆项目并安装依赖
+git clone https://github.com/xiaovchasis0613/scan-order.git
+cd scan-order
 
-    # 2. 回菜单页（用 driver.get 直接跳）
-    logged_in_menu.driver.get(f"{logged_in_menu.base_url}/menu")
+# 创建虚拟环境
+python -m venv .venv
+# Windows 激活: .venv\Scripts\activate
+# Mac/Linux 激活: source .venv/bin/activate
 
-    # 3. 加购一次
-    logged_in_menu.add_dish_to_cart("黄焖鸡")
+# 安装依赖
+pip install -r requirements.txt
 
-    # 4. 再看购物车
-    cart_after = logged_in_menu.go_to_cart()
-    qty_after = cart_after.get_quantity_of("黄焖鸡")
 
-    # 5. 断言：+1
-    assert qty_after == qty_before + 1, f"期望 {qty_before + 1}，实际 {qty_after}"
+2. 启动后端服务
+uvicorn app.main:app --reload
+启动后，访问 http://127.0.0.1:8000/docs 即可查看 FastAPI 自动生成的 Swagger API 文档。
 
+
+
+
+
+🧪 自动化测试体系 (核心亮点)
+本项目高度重视测试代码的工程化，遵循了测试隔离与数据驱动的最佳实践。
+
+1. 接口自动化测试 (Pytest + Requests)
+Factory 工厂模式：通过 dish_factory、cart_factory、order_factory 快速生成测试数据，并在用例结束后自动清理数据库，保证用例相互隔离。
+
+多环境支持：支持通过 --env 参数切换测试环境（如 --env=test 使用测试数据库）。
+
+断言严谨：不仅校验 HTTP 状态码与响应体，还通过注入 db fixture 直接校验数据库落盘状态（如软删除、金额计算、订单快照）。
+
+运行接口测试：
+
+# 默认使用 dev 环境 (scan_order.db)
+pytest tests/
+
+# 指定测试环境 (test_scan_order.db)
+pytest tests/ --env=test
+2. UI 自动化测试 (Selenium)
+Page Object (PO) 模式：将页面元素定位与业务操作分离（如 LoginPage、CartPage），降低代码冗余，提升可维护性。
+
+失败自动截图：conftest.py 中注入了 pytest_runtest_makereport Hook，用例失败时自动截图并记录当前 URL，方便排查。
+
+无头模式：支持通过环境变量 HEADLESS=true 在后台静默运行 UI 测试，非常适合 CI/CD 流水线。
+
+运行 UI 测试：
+
+
+# 确保本地已启动后端服务 (http://localhost:5000)
+set HEADLESS=true  # Windows (如果不加，会弹出浏览器)
+# export HEADLESS=true # Mac/Linux
+
+pytest selenium_test/
+3. 生成 Allure 可视化报告
+
+# 运行测试并收集报告数据
+pytest tests/ --alluredir=./allure-results
+
+# 生成并打开 HTML 报告
+allure serve ./allure-results
+💡 数据库设计与架构亮点
+购物车表 (cart_items)：使用联合唯一索引 UNIQUE (user_id, dish_id) 防止重复插入，配合代码逻辑实现商品数量累加。
+
+订单快照：订单项 (order_items) 保存了菜品名称和当时的单价，即使商户后续修改菜品价格或删除菜品，历史订单数据依然准确。
+
+并发控制：在支付、接单、退款等状态流转中，使用 SQL UPDATE ... WHERE status = 'xxx' 实现乐观锁，防止高并发下的重复支付或状态错乱。
